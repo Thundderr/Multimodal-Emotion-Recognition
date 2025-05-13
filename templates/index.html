@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Multimodal Emotion Detection</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      background: #fff;
+    }
+    .grid-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: 50% 50%;
+      height: 100vh;
+      width: 100vw;
+      background: #fff;
+    }
+    .grid-item {
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: #fff;
+    }
+    .grid-item img, .grid-item canvas {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+    }
+    .label {
+      position: absolute;
+      top: 5px;
+      left: 5px;
+      padding: 4px 8px;
+      background: rgba(255,255,255,0.7);
+      color: #000;
+      font-family: sans-serif;
+      font-size: 14px;
+      border-radius: 4px;
+    }
+    #audioChart {
+      width: 98% !important;
+      height: 90% !important;
+    }
+  </style>
+</head>
+<body>
+  <div class="grid-container">
+    <div class="grid-item" style="grid-column:1; grid-row:1;">
+      <div class="label">Annotated Video</div>
+      <img src="{{ url_for('video_feed') }}" alt="Annotated feed">
+    </div>
+
+    <div class="grid-item" style="grid-column:2; grid-row:1;">
+      <div class="label">Model Input (Grayscale)</div>
+      <img src="{{ url_for('input_feed') }}" alt="Input feed">
+    </div>
+
+    <div class="grid-item" style="grid-column:1 / span 2; grid-row:2;">
+      <div class="label">Audio (last 60 s)</div>
+      <canvas id="audioChart"></canvas>
+    </div>
+  </div>
+
+  <script>
+    const ctx = document.getElementById('audioChart').getContext('2d');
+    const chart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        datasets: [
+          {
+            label: 'Volume (RMS)',
+            data: [],
+            borderColor: 'blue',
+            fill: false,
+            yAxisID: 'y1',
+            parsing: {
+              xAxisKey: 'x',
+              yAxisKey: 'y'
+            }
+          },
+          {
+            label: 'Pitch (Hz)',
+            data: [],
+            borderColor: 'red',
+            fill: false,
+            yAxisID: 'y2',
+            parsing: {
+              xAxisKey: 'x',
+              yAxisKey: 'y'
+            }
+          }
+        ]
+      },
+      options: {
+        animation: false,
+        scales: {
+          x: {
+            type: 'linear',
+            title: { display: true, text: 'Time (s)' },
+            min: 0,
+            max: 60
+          },
+          y1: {
+            type: 'linear',
+            position: 'left',
+            title: { display: true, text: 'Volume' }
+          },
+          y2: {
+            type: 'linear',
+            position: 'right',
+            title: { display: true, text: 'Pitch (Hz)' },
+            grid: { drawOnChartArea: false }
+          }
+        },
+        plugins: {
+          legend: { labels: { color: '#000' } }
+        }
+      }
+    });
+
+    const evtSource = new EventSource("/audio_data");
+    evtSource.onmessage = e => {
+      const { time, volume, pitch } = JSON.parse(e.data);
+
+      chart.data.datasets[0].data.push({ x: time, y: volume });
+      chart.data.datasets[1].data.push({ x: time, y: pitch });
+
+      chart.data.datasets.forEach(ds => {
+        while (ds.data.length && ds.data[0].x < time - 60) {
+          ds.data.shift();
+        }
+      });
+
+      chart.options.scales.x.min = Math.max(0, time - 60);
+      chart.options.scales.x.max = Math.max(60, time);
+
+      chart.update('none');
+    };
+  </script>
+</body>
+</html>
