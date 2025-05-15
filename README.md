@@ -20,6 +20,7 @@
 
 - https://www.kaggle.com/datasets/sudarshanvaidya/random-images-for-face-emotion-recognition
 - https://github.com/maelfabien/Multimodal-Emotion-Recognition
+- https://zenodo.org/records/1188976#.XsAXemgzaUk
 
 pyaudio 
 opencv-python
