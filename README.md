@@ -19,3 +19,22 @@
 
 - https://www.kaggle.com/datasets/sudarshanvaidya/random-images-for-face-emotion-recognition
 - https://github.com/maelfabien/Multimodal-Emotion-Recognition
+
+
+# For audio branch
+1. Make a /Data directory
+    - /raw subdirectory
+2. download the video_speech_actor(x).zip from https://zenodo.org/records/1188976
+3. unzip in the raw directory 
+4. run 
+    ```bash
+        python extract_media.py
+    ```
+5. run 
+    ```bash
+        python audio_preprocessing.py
+    ```
+6. run 
+    ```bash
+        python train_audio_model.py
+    ```
