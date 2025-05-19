@@ -2,3 +2,4 @@ venv
 random-images-for-face-emotion-recognition
 Models
 Data
+*.DS_Store
