@@ -9,10 +9,16 @@ import numpy as np
 import pyaudio
 from flask import Flask, render_template, Response, stream_with_context
 from tensorflow.keras.models import load_model
+import librosa
+
 
 # INNIT MATE
 app = Flask(__name__)
 model = load_model("Models/face_emotion_cnn.h5")
+audio_model = load_model("Models/audio_emotion_model.h5")
+audio_emotion_labels = ['angry', 'calm', 'disgust', 'fearful', 'happy', 'neutral', 'sad', 'surprised']
+
+
 emotion_labels = [
     "anger","contempt","disgust","fear",
     "happiness","neutrality","sadness","surprise"
@@ -54,6 +60,7 @@ stream = p.open(format=FORMAT,
                 frames_per_buffer=CHUNK)
 
 audio_queue = queue.Queue()
+mfcc_buffer = []
 start_time  = time.time()
 
 def audio_capture_loop():
@@ -71,7 +78,41 @@ def audio_capture_loop():
             pitch    = float(freqs[peak_idx])
 
             t = time.time() - start_time
-            audio_queue.put({"time": t, "volume": vol, "pitch": pitch})
+
+
+            y = np.frombuffer(data, np.int16).astype(np.float32) / 32768.0
+            mfcc_buffer.append(y)
+
+            # Keep last 2 seconds (e.g. 20 chunks of 0.1s)
+            if len(mfcc_buffer) > 20:
+                mfcc_buffer.pop(0)
+
+            # Once buffer is full, run inference
+            if len(mfcc_buffer) == 20:
+                full_audio = np.concatenate(mfcc_buffer)
+                mfcc = librosa.feature.mfcc(y=full_audio, sr=RATE, n_mfcc=40)
+                if mfcc.shape[1] < 300:
+                    mfcc = np.pad(mfcc, ((0,0), (0, 300 - mfcc.shape[1])), mode='constant')
+                else:
+                    mfcc = mfcc[:, :300]
+                mfcc = mfcc.T[np.newaxis, :, :]  # (1, time, features)
+
+                preds = audio_model.predict(mfcc, verbose=0)[0]
+                top_idx = np.argmax(preds)
+                audio_emotion = audio_emotion_labels[top_idx]
+                audio_queue.put({"time": t,
+                                "volume": vol,
+                                "pitch": pitch, 
+                                "emotion": audio_emotion, 
+                                "emotion_confidence": float(preds[top_idx])})
+            else:
+                audio_queue.put({
+                    "time": t,
+                    "pitch": pitch,
+                    "emotion": "loading",
+                    "emotion_confidence": 0.0
+                })
+                
 
     except Exception:
         print("Audio thread exception bzzt")
@@ -180,7 +221,7 @@ if __name__ == '__main__':
 
     app.run(
         host='0.0.0.0',
-        port=5000,
+        port=5001,
         debug=True,
         threaded=True,
         use_reloader=False
