@@ -26,15 +26,16 @@
     - /raw subdirectory
 2. download the video_speech_actor(x).zip from https://zenodo.org/records/1188976
 3. unzip in the raw directory 
-4. run 
+4. winget install ffmpeg if on windows
+5. run 
     ```bash
         python extract_media.py
     ```
-5. run 
+6. run 
     ```bash
         python audio_preprocessing.py
     ```
-6. run 
+7. run 
     ```bash
         python train_audio_model.py
     ```
