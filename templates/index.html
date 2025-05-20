@@ -64,6 +64,9 @@
 
     <div class="grid-item" style="grid-column:1 / span 2; grid-row:2;">
       <div class="label">Audio (last 60 s)</div>
+      <div id="audioEmotion" style="margin-bottom: 10px; font-size: 18px; font-family: sans-serif; color: #000;">
+        Audio Emotion: <strong>...</strong>
+      </div>
       <canvas id="audioChart"></canvas>
     </div>
   </div>
@@ -127,7 +130,7 @@
 
     const evtSource = new EventSource("/audio_data");
     evtSource.onmessage = e => {
-      const { time, volume, pitch } = JSON.parse(e.data);
+      const { time, volume, pitch, emotion, emotion_confidence } = JSON.parse(e.data);
 
       chart.data.datasets[0].data.push({ x: time, y: volume });
       chart.data.datasets[1].data.push({ x: time, y: pitch });
@@ -142,6 +145,8 @@
       chart.options.scales.x.max = Math.max(60, time);
 
       chart.update('none');
+      const emoDisplay = document.getElementById('audioEmotion').querySelector('strong');
+      emoDisplay.textContent = `${emotion} (${(emotion_confidence * 100).toFixed(1)}%)`;
     };
   </script>
 </body>
