@@ -3,7 +3,6 @@ import threading
 import traceback
 import json
 import queue
-
 import cv2
 import numpy as np
 import pyaudio
@@ -24,11 +23,23 @@ emotion_labels = [
     "happiness","neutrality","sadness","surprise"
 ]
 
-# CAMERA STUFF
+# FACE DETECTION SETUP
+face_cascade = cv2.CascadeClassifier(
+    cv2.data.haarcascades + 'haarcascade_frontalface_default.xml'
+)
+
+# SMOOTHING & DETECTION PARAMETERS
+DETECTION_INTERVAL = 2
+SMOOTHING_ALPHA = 0.9
+PADDING_PERCENT = 0.2
+frame_counter = 0
+last_bbox = None
+smoothed_bbox = None
+
+# CAMERA SETUP
 cap = cv2.VideoCapture(0)
 if not cap.isOpened():
     raise RuntimeError("Could not start camera :(")
-
 frame_lock   = threading.Lock()
 latest_frame = None
 
@@ -60,6 +71,7 @@ stream = p.open(format=FORMAT,
                 frames_per_buffer=CHUNK)
 
 audio_queue = queue.Queue()
+emotion_queue = queue.Queue()
 mfcc_buffer = []
 start_time  = time.time()
 
@@ -182,6 +194,8 @@ def index():
     start_time = time.time()
     with audio_queue.mutex:
         audio_queue.queue.clear()
+    with emotion_queue.mutex:
+        emotion_queue.queue.clear()
     return render_template('index.html')
 
 @app.route('/video_feed')
@@ -206,9 +220,21 @@ def audio_data():
                 data = audio_queue.get()
                 yield f"data: {json.dumps(data)}\n\n"
         except Exception:
-            print("Server event thread exception boooo")
             traceback.print_exc()
+    return Response(
+        stream_with_context(event_stream()),
+        mimetype='text/event-stream'
+    )
 
+@app.route('/emotion_data')
+def emotion_data():
+    def event_stream():
+        try:
+            while True:
+                data = emotion_queue.get()
+                yield f"data: {json.dumps(data)}\n\n"
+        except Exception:
+            traceback.print_exc()
     return Response(
         stream_with_context(event_stream()),
         mimetype='text/event-stream'
@@ -218,7 +244,6 @@ def audio_data():
 if __name__ == '__main__':
     threading.Thread(target=camera_loop, daemon=True).start()
     threading.Thread(target=audio_capture_loop, daemon=True).start()
-
     app.run(
         host='0.0.0.0',
         port=5001,

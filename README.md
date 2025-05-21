@@ -8,12 +8,13 @@
 
 ## Instructions
 
-1. Start up a venv, ideally with python 3.12.x
-2. In the root directory run pip install -r requirements.txt
-3. For some reason the model has an ungodly size so uh train your own in the python notebook found in root dir, you can run it for 5 epochs probably
-4. Run python app.py
-5. Go to your localhost at port 5000
-6. Cry if it doesnt work or throws an error
+1. Create venv using "python -m venv venv", ideally with python 3.12.x or 3.11.x, whichever works better
+2. Run it with .\venv\Scripts\activate if you're on windows, something else if you're in macOS or linux
+3. In the root directory run pip install -r requirements.txt. There might be errors downloading tensorflow, pyaudio, flask, and opencv-python (also known as cv2) so if they say they are not imported, try doing those one by one.
+4. For some reason the model has an ungodly size so uh train your own in the python notebook found in root dir, you can run it for 5 epochs probably
+5. Run python app.py
+6. Go to your localhost at port 5000, if that is already taken edit the port at the bottom of app.py
+7. Cry if it doesnt work or throws an error
 
 ## Links
 
