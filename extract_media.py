@@ -10,7 +10,8 @@ FRAMES_DIR = "data/frames"
 os.makedirs(AUDIO_DIR, exist_ok=True)
 os.makedirs(FRAMES_DIR, exist_ok=True)
 
-mp4_files = glob(os.path.join(RAW_DIR, "*.mp4"))
+mp4_files = glob(os.path.join(RAW_DIR, "**", "*.mp4"), recursive=True)
+
 
 for mp4_path in tqdm(mp4_files, desc="Extracting audio and frames"):
     filename = os.path.basename(mp4_path)
