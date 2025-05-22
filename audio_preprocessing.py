@@ -6,8 +6,8 @@ import librosa
 from tqdm import tqdm
 
 # Folder structure
-AUDIO_DIR = "Data/audio"
-MFCC_DIR = "Data/mfcc"
+AUDIO_DIR = "data/audio"
+MFCC_DIR = "data/mfcc"
 os.makedirs(MFCC_DIR, exist_ok=True)
 
 # Constants

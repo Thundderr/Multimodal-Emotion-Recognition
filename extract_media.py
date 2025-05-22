@@ -3,9 +3,9 @@ from glob import glob
 from tqdm import tqdm
 import subprocess
 
-RAW_DIR = "Data/raw"
-AUDIO_DIR = "Data/audio"
-FRAMES_DIR = "Data/frames"
+RAW_DIR = "data/raw"
+AUDIO_DIR = "data/audio"
+FRAMES_DIR = "data/frames"
 
 os.makedirs(AUDIO_DIR, exist_ok=True)
 os.makedirs(FRAMES_DIR, exist_ok=True)

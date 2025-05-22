@@ -10,7 +10,7 @@ from tensorflow.keras.layers import Conv1D, MaxPooling1D, LSTM, Dense, Dropout, 
 from tensorflow.keras.optimizers import Adam
 
 # Paths
-MFCC_DIR = "Data/mfcc"
+MFCC_DIR = "data/mfcc"
 metadata_path = os.path.join(MFCC_DIR, "metadata.csv")
 
 # Load metadata
